@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import Loading from "../components/Loading";
-import { generateCodeChallenge, generateRandomString,  } from "../utils/helper";
+import { Loading } from "../components";
+import { generateCodeChallenge, generateRandomString, setAccessDataToLocal } from "../utils/helper";
 
-export default function Login({ setIsLoggedIn }) {
-  const clientId = '2c4d15e05da7494eb0a068d12f4e6ef7';
-  const redirectUri = 'http://localhost:5173';
+export default function Login({ setIsLoggedIn, redirectUri, clientId }) {
   const [error, setError] = useState('');
   const [hasCode, setHasCode] = useState(false);
 
@@ -25,6 +23,11 @@ export default function Login({ setIsLoggedIn }) {
     });
 
     window.location = 'https://accounts.spotify.com/authorize?' + args;
+  }
+
+  const saveDataAfterLogin = (data) => {
+    localStorage.setItem('is_loggedin', 'true');
+    setAccessDataToLocal(data);
   }
 
   const getQueryParam = useCallback((name) => {
@@ -56,15 +59,14 @@ export default function Login({ setIsLoggedIn }) {
       }
       
       const data = await response.json();
-      localStorage.setItem('is_loggedin', 'true');
-      localStorage.setItem('access_token', data.access_token)
+      saveDataAfterLogin(data);
       setIsLoggedIn(true);
     } catch (error) {
       localStorage.removeItem('is_loggedin');
       setIsLoggedIn(false);
       setError(error.message);
     }
-  }, [setIsLoggedIn]);
+  }, [setIsLoggedIn, clientId, redirectUri]);
 
   useEffect(() => {
     const code = getQueryParam('code');
