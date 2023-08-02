@@ -23,6 +23,20 @@ const generateCodeChallenge = async (codeVerifier) => {
   return base64encode(digest);
 }
 
+const removeUrlQueryParams = () => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  urlSearchParams.forEach((_, key) => urlSearchParams.delete(key));
+
+  const newSearch = urlSearchParams.toString();
+  const newURL = window.location.pathname + (newSearch ? '?' + newSearch : '');
+  window.history.replaceState({}, '', newURL);
+}
+
+const getQueryParam = (name) => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
 const isTokenExpired = () => {
   const expiresIn = parseInt(localStorage.getItem('expires_in'), 10);
   const issueTime = parseInt(localStorage.getItem('issue_time'), 10);
@@ -50,4 +64,6 @@ export {
   isTokenExpired,
   setAccessDataToLocal,
   removeAccessDataFromLocal,
+  removeUrlQueryParams,
+  getQueryParam,
 }

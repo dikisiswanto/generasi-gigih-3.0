@@ -1,7 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useState } from "react";
+import { getRecommendedSongs, getSearchedSongs } from "../services/songService";
+import { getProfile } from "../services/profileService";
 import { Header, Loading, SearchBar, SongCard } from "../components";
-import { removeAccessDataFromLocal } from "../utils/helper";
+import { removeAccessDataFromLocal, removeUrlQueryParams } from "../utils/helper";
 
 export default function SongList({ setIsLoggedIn, isExpired }) {
   const [songs, setSongs] = useState([]);
@@ -11,30 +13,10 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
   const [profile, setProfile] = useState({});
   let accessToken = localStorage.getItem('access_token');
   
-  const getSongs = useCallback(async () => {
+  const fetchRecommendedSongs = useCallback(async () => {
     try {
-      let params = {
-        "market": "ID",
-        "limit": 20,
-        "seed_artists": "7uEP7CL6JdUpyNTYdEzfb4,31aMmlq8isIAgojvmIwiS4,0ygQsC5td2maGmglpzd7tp,6oM1PyiV3LidEUIHKubg3W,41MozSoPIsD1dJM0CLPjZF",
-      };
-      
-      let q = Object.keys(params)
-        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
-        .join('&');
-
-      const response = await fetch('https://api.spotify.com/v1/recommendations?' + q, {
-        headers: {
-          Authorization: 'Bearer ' + accessToken
-        }
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error('Error: Gagal mengambil data', response.error);
-      }
-
-      setSongs(data.tracks);
+      const data = await getRecommendedSongs(accessToken);
+      setSongs(data);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -42,31 +24,10 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
     }
   }, []);
 
-  const getSongsByQuery = useCallback(async (query) => {
+  const fetchSongsByQuery = useCallback(async (query) => {
     try {
-      let params = {
-        "market": "ID",
-        "limit": 20,
-        "type": "track",
-        "q": query,
-      };
-      
-      let q = Object.keys(params)
-        .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
-        .join('&');
-
-      const response = await fetch('https://api.spotify.com/v1/search?' + q, {
-        headers: {
-          Authorization: 'Bearer ' + accessToken
-        }
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error('Error: Gagal mengambil data', response.error);
-      }
-
-      setSongs(data.tracks.items);
+      const data = await getSearchedSongs(query, accessToken);
+      setSongs(data);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -76,17 +37,7 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
 
   const getUserProfile = async () => {
     try {
-      const response = await fetch('https://api.spotify.com/v1/me', {
-        headers: {
-          Authorization: 'Bearer ' + accessToken
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Gagal saat mengambil informasi akun');
-      }
-
-      const data = await response.json();
+      const data = await getProfile(accessToken);
       setProfile(data);
     } catch (error) {
       setError(error.message);
@@ -106,31 +57,26 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
   }
 
   useEffect(() => {
-    if (!songs.length) {
+    if (!songs.length && !isExpired) {
       setLoading(true);
-      getSongs();
+      fetchRecommendedSongs();
     }
     
-    if (query) {
+    if (query && !isExpired) {
       setLoading(true);
       setSongs([]);
-      getSongsByQuery(query);
+      fetchSongsByQuery(query);
     }
   }, [query, isExpired]);
 
   useEffect(() => {
-    if (!Object.keys(profile).length) {
+    if (!Object.keys(profile).length && !isExpired) {
       getUserProfile();
     }
-  }, [])
+  }, [isExpired])
 
   useEffect(() => {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    urlSearchParams.forEach((value, key) => urlSearchParams.delete(key));
-
-    const newSearch = urlSearchParams.toString();
-    const newURL = window.location.pathname + (newSearch ? '?' + newSearch : '');
-    window.history.replaceState({}, '', newURL);
+    removeUrlQueryParams();
   }, []);
 
   return (

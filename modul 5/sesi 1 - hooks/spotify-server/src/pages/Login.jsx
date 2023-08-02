@@ -1,28 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loading } from "../components";
-import { generateCodeChallenge, generateRandomString, setAccessDataToLocal } from "../utils/helper";
+import { getAccessToken, getGrantAccessLink } from "../services/authService";
+import { getQueryParam, setAccessDataToLocal } from "../utils/helper";
 
 export default function Login({ setIsLoggedIn, redirectUri, clientId }) {
   const [error, setError] = useState('');
   const [hasCode, setHasCode] = useState(false);
 
   const handleLogin = async () => {
-    const codeVerifier = generateRandomString(128);
-    const state = generateRandomString(16);
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-    const scope = 'user-read-email user-read-private';
-    localStorage.setItem('code_verifier', codeVerifier);
-    const args = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      scope: scope,
-      redirect_uri: redirectUri,
-      state: state,
-      code_challenge_method: 'S256',
-      code_challenge: codeChallenge
-    });
-
-    window.location = 'https://accounts.spotify.com/authorize?' + args;
+    const grantAccessLink = await getGrantAccessLink({ clientId, redirectUri });
+    window.location = grantAccessLink;
   }
 
   const saveDataAfterLogin = (data) => {
@@ -30,35 +17,9 @@ export default function Login({ setIsLoggedIn, redirectUri, clientId }) {
     setAccessDataToLocal(data);
   }
 
-  const getQueryParam = useCallback((name) => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get(name);
-  }, []);
-
-  const getAccessToken = useCallback(async (code) => {
-    const codeVerifier = localStorage.getItem('code_verifier');
-    const body = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code: code,
-      redirect_uri: redirectUri,
-      client_id: clientId,
-      code_verifier: codeVerifier
-    });
-
+  const fetchAccessToken = useCallback(async (code) => {
     try {
-      const response = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: body.toString(),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Ada kesalahan saat menyambungkan akun Anda');
-      }
-      
-      const data = await response.json();
+      const data = await getAccessToken({code, clientId, redirectUri});
       saveDataAfterLogin(data);
       setIsLoggedIn(true);
     } catch (error) {
@@ -72,9 +33,9 @@ export default function Login({ setIsLoggedIn, redirectUri, clientId }) {
     const code = getQueryParam('code');
     if (code) {
       setHasCode(true);
-      getAccessToken(code);
+      fetchAccessToken(code);
     }
-  }, [setHasCode, getAccessToken, getQueryParam]);
+  }, [setHasCode, fetchAccessToken]);
 
   return (
     <>
