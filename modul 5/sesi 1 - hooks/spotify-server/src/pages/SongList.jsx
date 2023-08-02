@@ -35,7 +35,7 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
     }
   }, []);
 
-  const getUserProfile = async () => {
+  const fetchUserProfile = async () => {
     try {
       const data = await getProfile(accessToken);
       setProfile(data);
@@ -71,7 +71,7 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
 
   useEffect(() => {
     if (!Object.keys(profile).length && !isExpired) {
-      getUserProfile();
+      fetchUserProfile();
     }
   }, [isExpired])
 
