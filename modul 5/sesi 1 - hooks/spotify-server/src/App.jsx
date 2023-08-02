@@ -11,29 +11,25 @@ function App() {
   const loginStatusFromStorage = localStorage.getItem('is_loggedin') || false;
 
   const [isLoggedIn, setIsLoggedIn] = useState(loginStatusFromStorage);
+  const [isExpired, setIsExpired] = useState(isTokenExpired());
 
   const getRefreshToken = async () => {
-    const codeVerifier = localStorage.getItem('code_verifier');
-    const code = localStorage.getItem('code');
     const refreshToken = localStorage.getItem('refresh_token');
 
     const body = new URLSearchParams({
-      grant_type: 'authorization_code',
-      code: code,
-      refresh_token: refreshToken,
-      redirect_uri: REDIRECT_URI,
+      grant_type: 'refresh_token',
       client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      code_verifier: codeVerifier
+      refresh_token: refreshToken
     });
 
     try {
       const response = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: 'Basic ' + (CLIENT_ID + ':' + CLIENT_SECRET).toString('base64'),
         },
-        body: body.toString(),
+        body: body,
       });
       
       if (!response.ok) {
@@ -41,28 +37,28 @@ function App() {
       }
       
       const data = await response.json();
+
       setAccessDataToLocal(data);
+      setIsExpired(isTokenExpired());
     } catch (error) {
-      localStorage.removeItem('is_loggedin');
-      setIsLoggedIn(false);
+      console.log(error.message);
     }
   }
 
   useEffect(() => {
-    if (isLoggedIn && isTokenExpired()) {
+    if (isLoggedIn && isExpired) {
       getRefreshToken();
     }
-  }, [isLoggedIn])
+  }, []);
 
   return (
     <div className="bg-slate-900 min-h-screen flex flex-col text-white">
       {isLoggedIn ? (
-        <SongList setIsLoggedIn={setIsLoggedIn} />
+        <SongList setIsLoggedIn={setIsLoggedIn} isExpired={isExpired} />
         ) : (
         <Login
           setIsLoggedIn={setIsLoggedIn}
           clientId={CLIENT_ID}
-          clientSecret={CLIENT_SECRET}
           redirectUri={REDIRECT_URI}
         />
       )}

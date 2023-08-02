@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Header, Loading, SearchBar, SongCard } from "../components";
 import { removeAccessDataFromLocal } from "../utils/helper";
 
-export default function SongList({ setIsLoggedIn }) {
+export default function SongList({ setIsLoggedIn, isExpired }) {
   const [songs, setSongs] = useState([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function SongList({ setIsLoggedIn }) {
       setLoading(false);
       setError(error.message);
     }
-  }, [accessToken]);
+  }, []);
 
   const getSongsByQuery = useCallback(async (query) => {
     try {
@@ -72,7 +72,7 @@ export default function SongList({ setIsLoggedIn }) {
       setLoading(false);
       setError(error.message);
     }
-  }, [accessToken]);
+  }, []);
 
   const getUserProfile = async () => {
     try {
@@ -116,7 +116,7 @@ export default function SongList({ setIsLoggedIn }) {
       setSongs([]);
       getSongsByQuery(query);
     }
-  }, [query]);
+  }, [query, isExpired]);
 
   useEffect(() => {
     if (!Object.keys(profile).length) {

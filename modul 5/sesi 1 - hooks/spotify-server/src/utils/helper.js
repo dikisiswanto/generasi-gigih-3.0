@@ -24,11 +24,11 @@ const generateCodeChallenge = async (codeVerifier) => {
 }
 
 const isTokenExpired = () => {
-  const expiresIn = localStorage.getItem('expires_in');
-  const issueTime = localStorage.getItem('issue_time');
+  const expiresIn = parseInt(localStorage.getItem('expires_in'), 10);
+  const issueTime = parseInt(localStorage.getItem('issue_time'), 10);
   const currentTime = Math.floor(Date.now() / 1000); // Convert milliseconds to seconds
   return currentTime >= issueTime + expiresIn;
-}
+};
 
 const setAccessDataToLocal = (data) => {
   for (const key in data) {

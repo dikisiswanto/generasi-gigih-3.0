@@ -72,7 +72,6 @@ export default function Login({ setIsLoggedIn, redirectUri, clientId }) {
     const code = getQueryParam('code');
     if (code) {
       setHasCode(true);
-      localStorage.setItem('code');
       getAccessToken(code);
     }
   }, [setHasCode, getAccessToken, getQueryParam]);
