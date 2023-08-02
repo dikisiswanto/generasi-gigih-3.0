@@ -84,8 +84,8 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
       <Header handleLogout={handleLogout} profile={profile} />
       <SearchBar handleSearch={handleSearch} />
       
-      <h1 className="py-3 mt-8 text-2xl font-bold inline-flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-2">
+      <h1 className="py-3 mt-8 text-xl lg:text-2xl font-bold lg:inline-flex lg:items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-2 inline-block">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
         </svg>
 
@@ -99,9 +99,16 @@ export default function SongList({ setIsLoggedIn, isExpired }) {
         </div>
       )}
       {error && (
-        <p className="my-5 text-center">{error}</p>
+        <div className="text-center">
+          <p className="my-5 text-center">{error}</p>
+          <a href="/" className="px-4 py-2 bg-green-600 text-white inline-block mx-auto text-center rounded">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2 inline-block">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+            Coba lagi</a>
+        </div>
       )}
-      <div className="grid grid-cols-4 gap-5 py-5">
+      <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-5 py-5">
         { !error && songs.map((song) => (
           <SongCard key={song.id} song={song} />
         ))}
